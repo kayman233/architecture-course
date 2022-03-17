@@ -4,6 +4,14 @@
 
 [Ссылка на lucidchart](https://lucid.app/lucidchart/519fcb23-5873-4d7c-a831-266bbe464072/edit?invitationId=inv_d24673b8-d3cf-4912-8a41-dad0adf7a962)
 
+### CRC-карты
+
+![](images/crc.png)
+
+### UML-диаграмма
+
+![](images/uml.png)
+
 
 ## Выполнили:
 - Иван Кудрявцев
