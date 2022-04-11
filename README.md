@@ -6,11 +6,11 @@
 
 ### CRC-карты
 
-![](images/crc.png)
+![crc](img/crc.png)
 
 ### UML-диаграмма
 
-![](images/uml.png)
+![uml](img/uml.png)
 
 
 ## Выполнили:
