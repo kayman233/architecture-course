@@ -1,13 +1,12 @@
 cmake_minimum_required(VERSION 3.21)
-project(architecture_course)
+project(Banks)
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(includes)
-add_subdirectory(includes)
+include_directories(include)
 
 add_executable(architecture_course
+        src/Transaction.cpp
+        src/TransactionStorage.cpp
+        src/Account.cpp
         src/main.cpp)
-
-target_link_libraries(architecture_course Account)
-
