@@ -9,4 +9,6 @@ add_executable(architecture_course
         src/Transaction.cpp
         src/TransactionStorage.cpp
         src/Account.cpp
-        src/main.cpp)
+        src/main.cpp
+        src/Bank.cpp
+        src/Client.cpp)

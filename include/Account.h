@@ -12,6 +12,8 @@ public:
     Account(uint32_t id, uint32_t clientId, uint32_t bankId, int64_t balance)
         : id(id), client_id(clientId), bank_id(bankId), balance(balance) {}
 
+    virtual ~Account() = default;
+
     uint32_t getClientId() const { return client_id; }
 
     uint32_t getBankId() const { return bank_id; }
@@ -70,7 +72,6 @@ public:
     void setPercent(float _percent) { Debit::percent = _percent; }
 
     bool checkRules() override;
-
 
 private:
     float percent;
