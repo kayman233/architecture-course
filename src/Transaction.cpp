@@ -1,3 +1,4 @@
+#include <sstream>
 #include "Transaction.h"
 
 std::ostream &operator<<(std::ostream &stream, const Transaction &tr) {

@@ -9,7 +9,10 @@
 
 struct BankConfig {
     uint32_t debitPercent = 5;
-    // ...
+    uint32_t depositPercent = 1;
+    uint32_t maxSumForSusClient = 1000; // максимальная сумма для сомнительных клиентов
+    uint32_t commision = 1;
+    uint32_t expiryYears = 4;
 };
 
 class Bank {
@@ -26,5 +29,14 @@ public:
     Client client(uint32_t id) const;
 
     uint32_t openDebit(uint32_t clientId);
-    void openDeposit(uint32_t clientId);
+    uint32_t openDeposit(uint32_t clientId);
+    uint32_t openCredit(uint32_t clientId);
+
+    const std::string &getSwiftCode() const {
+        return swiftCode_;
+    }
+
+    const std::string &getName() const {
+        return name_;
+    }
 };
