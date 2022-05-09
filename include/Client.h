@@ -10,6 +10,7 @@ class Client {
     std::string lastName_;
     std::string addr_;
     std::string passportId_;
+    bool is_sus = true;
 
 public:
     Client(std::string firstName, std::string lastName);
@@ -19,10 +20,21 @@ public:
     std::string lastName() const;
 
     void setAddress(const std::string& addr);
-    std::string address() const;
 
     void setPassportId(const std::string& passportId);
-    std::string passportId() const;
+
+    bool isSus() const {
+        return is_sus;
+    }
+
+    void setIsSus(bool is_sus_) {
+        Client::is_sus = is_sus_;
+    }
+
+    const std::string &getAddr() const;
+
+    const std::string &getPassportId() const;
+
 
 private:
     void setId(uint32_t id);

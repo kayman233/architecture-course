@@ -10,10 +10,8 @@ std::string Client::firstName() const { return firstName_; }
 std::string Client::lastName() const { return lastName_; }
 
 void Client::setAddress(const std::string &addr) { addr_ = addr; }
-std::string Client::address() const { return addr_; }
 
 void Client::setPassportId(const std::string &passportId) { passportId_ = passportId; }
-std::string Client::passportId() const { return passportId_; }
 
 void Client::setId(uint32_t id) {
     if (id_ != 0) {
@@ -21,4 +19,12 @@ void Client::setId(uint32_t id) {
                                  std::to_string(id_));
     }
     id_ = id;
+}
+
+const std::string &Client::getAddr() const {
+    return addr_;
+}
+
+const std::string &Client::getPassportId() const {
+    return passportId_;
 }

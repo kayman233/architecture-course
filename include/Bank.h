@@ -13,6 +13,7 @@ struct BankConfig {
     uint32_t maxSumForSusClient = 1000; // максимальная сумма для сомнительных клиентов
     uint32_t commision = 1;
     uint32_t expiryYears = 4;
+    uint32_t creditLimitMinus = 5000;
 };
 
 class Bank {
@@ -32,6 +33,8 @@ public:
     uint32_t openDeposit(uint32_t clientId);
     uint32_t openCredit(uint32_t clientId);
 
+    void checkClient(uint32_t clientId);
+
     const std::string &getSwiftCode() const {
         return swiftCode_;
     }
@@ -39,4 +42,10 @@ public:
     const std::string &getName() const {
         return name_;
     }
+
+    const BankConfig &getConfig() const {
+        return config_;
+    }
+
+    const std::vector<std::unique_ptr<Account>> &getAccounts() const;
 };
