@@ -18,4 +18,4 @@ struct Transaction {
     static Transaction deserialize(const std::string& line);
 };
 
-std::ostream &operator<<(std::ostream &stream, const Transaction &tr);
+std::ostream& operator<<(std::ostream& stream, const Transaction& tr);

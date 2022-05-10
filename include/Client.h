@@ -31,10 +31,9 @@ public:
         Client::is_sus = is_sus_;
     }
 
-    const std::string &getAddr() const;
+    const std::string& getAddr() const;
 
-    const std::string &getPassportId() const;
-
+    const std::string& getPassportId() const;
 
 private:
     void setId(uint32_t id);

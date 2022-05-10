@@ -11,7 +11,7 @@ struct BankConfig {
     uint32_t debitPercent = 5;
     uint32_t depositPercent = 1;
     uint32_t maxSumForSusClient = 1000; // максимальная сумма для сомнительных клиентов
-    uint32_t commision = 1;
+    uint32_t commission = 1;
     uint32_t expiryYears = 4;
     uint32_t creditLimitMinus = 5000;
 };
@@ -35,17 +35,17 @@ public:
 
     void checkClient(uint32_t clientId);
 
-    const std::string &getSwiftCode() const {
+    const std::string& getSwiftCode() const {
         return swiftCode_;
     }
 
-    const std::string &getName() const {
+    const std::string& getName() const {
         return name_;
     }
 
-    const BankConfig &getConfig() const {
+    const BankConfig& getConfig() const {
         return config_;
     }
 
-    const std::vector<std::unique_ptr<Account>> &getAccounts() const;
+    const std::vector<std::unique_ptr<Account>>& getAccounts() const;
 };

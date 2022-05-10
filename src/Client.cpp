@@ -5,13 +5,23 @@
 Client::Client(std::string firstName, std::string lastName)
     : firstName_(std::move(firstName)), lastName_(std::move(lastName)) {}
 
-uint32_t Client::id() const { return id_; }
-std::string Client::firstName() const { return firstName_; }
-std::string Client::lastName() const { return lastName_; }
+uint32_t Client::id() const {
+    return id_;
+}
+std::string Client::firstName() const {
+    return firstName_;
+}
+std::string Client::lastName() const {
+    return lastName_;
+}
 
-void Client::setAddress(const std::string &addr) { addr_ = addr; }
+void Client::setAddress(const std::string& addr) {
+    addr_ = addr;
+}
 
-void Client::setPassportId(const std::string &passportId) { passportId_ = passportId; }
+void Client::setPassportId(const std::string& passportId) {
+    passportId_ = passportId;
+}
 
 void Client::setId(uint32_t id) {
     if (id_ != 0) {
@@ -21,10 +31,10 @@ void Client::setId(uint32_t id) {
     id_ = id;
 }
 
-const std::string &Client::getAddr() const {
+const std::string& Client::getAddr() const {
     return addr_;
 }
 
-const std::string &Client::getPassportId() const {
+const std::string& Client::getPassportId() const {
     return passportId_;
 }

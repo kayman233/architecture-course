@@ -3,9 +3,9 @@
 #include "Client.h"
 #include <iostream>
 #include <set>
-#include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 
 struct UserBankInfo {
     Bank* bank;
@@ -43,18 +43,19 @@ void print_banks(std::vector<Bank*> banks) {
     printf("|         Банк        |       Swift код     |    %% Депозит  |   %% Комиссия  |\n");
     printf("+---------------------+---------------------+---------------+---------------+\n");
 
-    for(Bank* bank: banks) {
+    for (Bank* bank: banks) {
         printf("| %19s | %19s | %12d  | %12d  |\n", bank->getName().c_str(), bank->getSwiftCode().c_str(),
-               bank->getConfig().depositPercent, bank->getConfig().commision);
+               bank->getConfig().depositPercent, bank->getConfig().commission);
     }
 
-    if (banks.empty())
+    if (banks.empty()) {
         printf("|            Нет банков...          |\n");
+    }
 
     printf("+---------------------+---------------------+---------------+---------------+\n");
 }
 
-void add_account(int account_variant, Bank* bank,uint32_t client_id) {
+void add_account(int account_variant, Bank* bank, uint32_t client_id) {
     uint32_t account_id = 0;
     switch (account_variant) {
         case 1:
@@ -78,7 +79,7 @@ void add_account(int account_variant, Bank* bank,uint32_t client_id) {
 void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInfo) {
     printf("В каком банке хотите завести счет?\n");
     int i = 1;
-    for(Bank* bank: banks) {
+    for (Bank* bank: banks) {
         printf("%d. %s\n", i, bank->getName().c_str());
         ++i;
     }
@@ -107,7 +108,7 @@ void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInf
         return;
     }
 
-    for(UserBankInfo info: userBankInfo) {
+    for (UserBankInfo info: userBankInfo) {
         if (info.bank->getSwiftCode() == bank->getSwiftCode()) {
             Client client = bank->client(info.clientId);
             printf("Уже авторизованы, %s %s\n", client.firstName().c_str(), client.lastName().c_str());
@@ -144,7 +145,7 @@ void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInf
 
     int more_info_variant = get_variant(2);
 
-    if (more_info_variant == 1 ) {
+    if (more_info_variant == 1) {
         return;
     }
 
@@ -176,12 +177,13 @@ void showUserInfo(std::vector<UserBankInfo>& userBankInfo) {
     if (isEmptyUserInfo(userBankInfo)) {
         return;
     }
-    for(UserBankInfo info: userBankInfo) {
+    for (UserBankInfo info: userBankInfo) {
         printf("Счета в банке \"%s\":\n", info.bank->getName().c_str());
         printf("  id  Sum  Usage   Type\n");
-        for (const auto &account : info.bank->getAccounts()) {
+        for (const auto& account: info.bank->getAccounts()) {
             if (account->getClientId() == info.clientId) {
-                printf("  %d  %lld$  %lld$  %s\n", account->getId(), account->getBalance(), account->getCurrentUsage(), account->getType().c_str());
+                printf("  %d  %lld$  %lld$  %s\n", account->getId(), account->getBalance(), account->getCurrentUsage(),
+                       account->getType().c_str());
             }
         }
     }
@@ -193,12 +195,12 @@ void add_to_account(std::vector<UserBankInfo>& userBankInfo) {
     }
     std::vector<Bank*> banks;
     banks.reserve(userBankInfo.size());
-    for(UserBankInfo info: userBankInfo) {
+    for (UserBankInfo info: userBankInfo) {
         banks.push_back(info.bank);
     }
     printf("В каком банке хотите пополнить счет?\n");
     int i = 1;
-    for(Bank* bank: banks) {
+    for (Bank* bank: banks) {
         printf("%d. %s\n", i, bank->getName().c_str());
         ++i;
     }
@@ -217,7 +219,7 @@ void add_to_account(std::vector<UserBankInfo>& userBankInfo) {
     printf("Выберите счет\n");
     i = 1;
     std::vector<uint32_t> accounts;
-    for (const auto &account : bank->getAccounts()) {
+    for (const auto& account: bank->getAccounts()) {
         if (account->getClientId() == clientId) {
             accounts.push_back(account->getId());
             printf("%d.  %d\t%lld$\n", i, account->getId(), account->getBalance());
@@ -240,7 +242,8 @@ void add_to_account(std::vector<UserBankInfo>& userBankInfo) {
     char s[100]; // строка для считывания введённых данных
     scanf("%s", s); // считываем строку
 
-    while (sscanf(s, "%d", &sum) != 1 || bank->getAccounts()[accounts[account_variant - 1] - 1]->topUpAccount(sum) == 0) {
+    while (sscanf(s, "%d", &sum) != 1 ||
+           bank->getAccounts()[accounts[account_variant - 1] - 1]->topUpAccount(sum) == 0) {
         if (sum == -1) {
             return;
         }
@@ -257,12 +260,12 @@ void get_cash(std::vector<UserBankInfo>& userBankInfo) {
     }
     std::vector<Bank*> banks;
     banks.reserve(userBankInfo.size());
-    for(UserBankInfo info: userBankInfo) {
+    for (UserBankInfo info: userBankInfo) {
         banks.push_back(info.bank);
     }
     printf("В каком банке хотите снять деньги?\n");
     int i = 1;
-    for(Bank* bank: banks) {
+    for (Bank* bank: banks) {
         printf("%d. %s\n", i, bank->getName().c_str());
         ++i;
     }
@@ -281,7 +284,7 @@ void get_cash(std::vector<UserBankInfo>& userBankInfo) {
     printf("Выберите счет\n");
     i = 1;
     std::vector<uint32_t> accounts;
-    for (const auto &account : bank->getAccounts()) {
+    for (const auto& account: bank->getAccounts()) {
         if (account->getClientId() == clientId) {
             accounts.push_back(account->getId());
             printf("%d.  %d\t%lld$\n", i, account->getId(), account->getBalance());
@@ -321,12 +324,12 @@ void add_info(std::vector<UserBankInfo>& userBankInfo) {
     }
     std::vector<Bank*> banks;
     banks.reserve(userBankInfo.size());
-    for(UserBankInfo info: userBankInfo) {
+    for (UserBankInfo info: userBankInfo) {
         banks.push_back(info.bank);
     }
     printf("В каком банке дополнить информацию о вас?\n");
     int i = 1;
-    for(Bank* bank: banks) {
+    for (Bank* bank: banks) {
         printf("%d. %s\n", i, bank->getName().c_str());
         ++i;
     }
@@ -405,12 +408,14 @@ int main() {
             case 4:
                 printf("Trans");
                 break;
+
             case 5:
                 add_info(userBankInfo);
                 break;
             case 6:
                 print_banks(banks);
                 break;
+
             case 7:
                 showUserInfo(userBankInfo);
                 break;
