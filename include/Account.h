@@ -1,10 +1,13 @@
 #pragma once
 
 #include <ctime>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
+
+class Transaction;
 
 class Account {
 public:
@@ -41,9 +44,10 @@ public:
 
     virtual int getCash(int64_t value);
 
-    virtual bool checkRules() = 0;
-
     virtual bool transferMoneyTo(Account& other, int64_t value);
+
+    virtual std::optional<std::string /* error msg */> checkRulesFromAccount(const Transaction& tr) = 0;
+    virtual std::optional<std::string /* error msg */> checkRulesToAccount(const Transaction& tr) = 0;
 
 private:
     uint32_t id;
@@ -91,11 +95,12 @@ public:
         expiry_date = expiryDate;
     }
 
-    bool checkRules() override;
-
     int getCash(int64_t value) override;
 
     bool transferMoneyTo(Account& other, int64_t value) override;
+
+    std::optional<std::string /* error msg */> checkRulesFromAccount(const Transaction& tr) override;
+    std::optional<std::string /* error msg */> checkRulesToAccount(const Transaction& tr) override;
 
 private:
     float percent_per_year;
@@ -116,11 +121,12 @@ public:
         Debit::percent = _percent;
     }
 
-    bool checkRules() override;
-
     int getCash(int64_t value) override;
 
     bool transferMoneyTo(Account& other, int64_t value) override;
+
+    std::optional<std::string /* error msg */> checkRulesFromAccount(const Transaction& tr) override;
+    std::optional<std::string /* error msg */> checkRulesToAccount(const Transaction& tr) override;
 
 private:
     float percent;
@@ -134,8 +140,6 @@ public:
     void setCommission(float _commission) {
         Credit::commission = _commission;
     }
-
-    bool checkRules() override;
 
     int getCash(int64_t value) override;
     bool transferMoneyTo(Account& other, int64_t value) override;
@@ -157,4 +161,7 @@ public:
     void setCreditLimit(int64_t _creditLimit) {
         Credit::creditLimit = _creditLimit;
     }
+
+    std::optional<std::string /* error msg */> checkRulesFromAccount(const Transaction& tr) override;
+    std::optional<std::string /* error msg */> checkRulesToAccount(const Transaction& tr) override;
 };

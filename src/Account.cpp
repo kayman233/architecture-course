@@ -1,4 +1,5 @@
 #include "Account.h"
+#include "Transaction.h"
 
 void Account::addToAccount(int64_t value) {
     this->balance += value;
@@ -36,37 +37,25 @@ void Account::setLimit(int64_t lim) {
     limit = lim;
 }
 
-bool Deposit::checkRules() {
+int Deposit::getCash(int64_t value) {
     printf("Нельзя снимать и переводить деньги в депозите\n");
     return false;
 }
 
-int Deposit::getCash(int64_t value) {
-    return this->checkRules();
-}
-
 bool Deposit::transferMoneyTo(Account& other, int64_t value) {
-    return this->checkRules();
+    printf("Нельзя снимать и переводить деньги в депозите\n");
+    return false;
 }
 
-bool Debit::checkRules() {
-    if (this->getLimit() == -1) {
-        return true;
-    }
-    if (this->getLimit() <= this->getCurrentUsage()) {
-        printf("Превышен лимит\n");
-        printf("Ваш лимит %ld\n", this->getLimit());
-        printf("Вы использовали %ld\n", this->getCurrentUsage());
-        printf("(чтобы увеличить лимит дополните информацию о вас)\n");
-        return false;
-    }
-    return true;
+std::optional<std::string /* error msg */> Deposit::checkRulesFromAccount(const Transaction& tr) {
+    throw std::runtime_error("not implemented");
+}
+
+std::optional<std::string /* error msg */> Deposit::checkRulesToAccount(const Transaction& tr) {
+    return {}; // можно пополнять депозит
 }
 
 int Debit::getCash(int64_t value) {
-    if (!this->checkRules()) {
-        return 0;
-    }
     if (value <= 0) {
         return 0;
     }
@@ -100,31 +89,24 @@ bool Debit::transferMoneyTo(Account& other, int64_t value) {
     return true;
 }
 
-bool Credit::checkRules() {
-    if (this->getLimit() == -1) {
-        return true;
+std::optional<std::string /* error msg */> Debit::checkRulesFromAccount(const Transaction& tr) {
+    if (getBalance() < tr.amount) {
+        return "Недостаточно средств";
     }
-    if (this->getLimit() <= this->getCurrentUsage()) {
-        printf("Превышен лимит\n");
-        printf("Ваш лимит %ld\n", this->getLimit());
-        printf("Вы использовали %ld\n", this->getCurrentUsage());
-        printf("(чтобы увеличить лимит дополните информацию о вас)\n");
-        return false;
+    if (this->getLimit() != -1) {
+        int64_t diff = this->getLimit() - (this->getCurrentUsage() + tr.amount);
+        if (diff < 0) {
+            return "Лимит на перевод со счета будет превышен на $" + std::to_string(-diff);
+        }
     }
-    if (this->getBalance() <= -this->getCreditLimit()) {
-        printf("Превышен кредитный лимит\n");
-        printf("Ваш баланс %ld\n", this->getBalance());
-        printf("Кредитный лимит -%ld\n", this->getCreditLimit());
+    return {};
+}
 
-        return false;
-    }
-    return true;
+std::optional<std::string /* error msg */> Debit::checkRulesToAccount(const Transaction& tr) {
+    return {}; // Можно пополнять дебетовый счет
 }
 
 int Credit::getCash(int64_t value) {
-    if (!this->checkRules()) {
-        return 0;
-    }
     if (value <= 0) {
         return 0;
     }
@@ -162,4 +144,22 @@ bool Credit::transferMoneyTo(Account& other, int64_t value) {
     this->getCash(value);
     other.addToAccount(value);
     return true;
+}
+
+std::optional<std::string /* error msg */> Credit::checkRulesFromAccount(const Transaction& tr) {
+    if (this->getLimit() != -1) {
+        int64_t diff = this->getLimit() - (this->getCurrentUsage() + tr.amount);
+        if (diff < 0) {
+            return "Лимит на перевод со счета будет превышен на $" + std::to_string(-diff);
+        }
+    }
+    int64_t creditOverflow = int64_t(tr.amount) - (this->getBalance() + this->getCreditLimit());
+    if (creditOverflow > 0) {
+        return "Превышение кредитного лимита на $" + std::to_string(creditOverflow);
+    }
+    return {};
+}
+
+std::optional<std::string /* error msg */> Credit::checkRulesToAccount(const Transaction& tr) {
+    return {};
 }

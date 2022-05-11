@@ -2,6 +2,7 @@
 #include <chrono>
 #include <ctime>
 #include <algorithm>
+#include <stdexcept>
 
 Bank::Bank(std::string swiftCode, std::string name, BankConfig config)
     : swiftCode_(std::move(swiftCode)), name_(std::move(name)), config_(config) {}
@@ -66,4 +67,37 @@ Account* Bank::findAccountById(uint32_t id) {
         return nullptr;
     }
     return it->get();
+}
+
+std::optional<std::string /* error msg */> Bank::addTransaction(Bank& toBank, const Transaction& tr) {
+    if (toBank.swiftCode_ != tr.receiverBankSwift) {
+        throw std::runtime_error("Bad toBank <" + toBank.swiftCode_ + "> != Transaction receiver " +
+                                 tr.receiverBankSwift);
+    }
+
+    auto fromAccount = findAccountById(tr.senderAccountId);
+    if (!fromAccount) {
+        return "В банке-отправителе нет счета с номером " + std::to_string(tr.senderAccountId);
+    }
+
+    auto error = fromAccount->checkRulesFromAccount(tr);
+    if (error.has_value()) {
+        return "Нарушаются правила счета, с которого выводятся деньги. " + *error;
+    }
+
+    auto toAccount = toBank.findAccountById(tr.receiverAccountId);
+    if (!toAccount) {
+        return "В банке-принимателе нет счета с номером " + std::to_string(tr.receiverAccountId);
+    }
+
+    error = toAccount->checkRulesToAccount(tr);
+    if (error.has_value()) {
+        return "Нарушаются правила счета, на который зачисляются деньги. " + *error;
+    }
+
+    transactions_.push_back(tr);
+    fromAccount->addToAccount(-int64_t(tr.amount));
+    fromAccount->setCurrentUsage(fromAccount->getCurrentUsage() + tr.amount);
+    toAccount->addToAccount(int64_t(tr.amount));
+    return {};
 }

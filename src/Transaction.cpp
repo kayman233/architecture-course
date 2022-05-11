@@ -1,6 +1,7 @@
 #include "Transaction.h"
 #include <sstream>
 
+/*
 std::ostream& operator<<(std::ostream& stream, const Transaction& tr) {
     return stream << "Transaction " << std::to_string(tr.amount) << " (cents) from " << tr.senderBank << ", account "
                   << tr.senderAccount << " to " << tr.receiverBank << ", account " << tr.receiverAccount << " dated "
@@ -18,3 +19,4 @@ std::string Transaction::serialize() const {
 Transaction Transaction::deserialize(const std::string& line) {
     throw std::runtime_error("todo");
 }
+*/

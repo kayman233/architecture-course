@@ -1,6 +1,7 @@
 #include "Account.h"
 #include "Bank.h"
 #include "Client.h"
+#include "Transaction.h"
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -328,6 +329,46 @@ void add_info(std::vector<UserBankInfo>& userBankInfo) {
     bank->recheckClient(clientId);
 }
 
+void do_transaction(const std::vector<Bank*>& banks) {
+    Bank* sendBank = choose_bank(banks, "Из какого банка отправить деньги?");
+    if (!sendBank) {
+        return;
+    }
+
+    Account* sendAcc = choose_account(*sendBank);
+    if (!sendAcc) {
+        return;
+    }
+
+    Bank* receiveBank = choose_bank(banks, "В какой банк отправить деньги?");
+    if (!receiveBank) {
+        return;
+    }
+
+    Account* receiveAcc = choose_account(*receiveBank);
+    if (!receiveAcc) {
+        return;
+    }
+
+    uint32_t amount;
+    printf("Сумма транзакции: ");
+    scanf("%uld", &amount);
+
+    Transaction tr{.amount = amount,
+                   .senderBankSwift = sendBank->getSwiftCode(),
+                   .senderAccountId = sendAcc->getId(),
+                   .receiverBankSwift = receiveBank->getSwiftCode(),
+                   .receiverAccountId = receiveAcc->getId()};
+    auto error = sendBank->addTransaction(*receiveBank, tr);
+
+    if (error.has_value()) {
+        printf("%s\n", error.value().c_str());
+        return;
+    }
+
+    printf("Транзакция %s успешно записана\n", tr.uuid.c_str());
+}
+
 int main() {
     std::vector<UserBankInfo> userBankInfo; // информация о текущем пользователе
     Client alice("Alice", "Hamburder");
@@ -356,7 +397,7 @@ int main() {
     banks.push_back(&greenBank);
     banks.push_back(&yellowBank);
 
-    userBankInfo.push_back(UserBankInfo {.bank = &greenBank, .clientId = carlAtGreen});
+    userBankInfo.push_back(UserBankInfo{.bank = &greenBank, .clientId = carlAtGreen});
     greenBank.findAccountById(carlAtGreen)->topUpAccount(100);
     printf("У вас есть дебетовый счет в Green Bank на имя Carl с $100\n");
 
@@ -378,8 +419,9 @@ int main() {
             case 3:
                 get_cash(userBankInfo);
                 break;
+
             case 4:
-                printf("Trans");
+                do_transaction(banks);
                 break;
 
             case 5:

@@ -1,11 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
 #include "Account.h"
 #include "Client.h"
+#include "Transaction.h"
 
 struct BankConfig {
     uint32_t debitPercent = 5;
@@ -22,6 +24,7 @@ class Bank {
     BankConfig config_;
     std::vector<std::unique_ptr<Account>> accounts_;
     std::unordered_map<uint32_t, Client> clients_;
+    std::vector<Transaction> transactions_;
 
 public:
     Bank(std::string swiftCode, std::string name, BankConfig config);
@@ -49,4 +52,7 @@ public:
 
     const std::vector<std::unique_ptr<Account>>& getAccounts() const;
     Account* findAccountById(uint32_t id);
+
+    std::optional<std::string /* error msg */> addTransaction(Bank& toBank, const Transaction& tr);
+    void rollbackTransaction(const std::string& uuid);
 };
