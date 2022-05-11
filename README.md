@@ -13,6 +13,17 @@
 ![uml](img/uml.png)
 
 
+### Для запуска
+
+```
+mkdir build
+cd build
+cmake ..
+make
+./architecture_course
+```
+
+
 ## Выполнили:
 - Иван Кудрявцев
 - Глеб Листов-Степанов

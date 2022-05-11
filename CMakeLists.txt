@@ -7,7 +7,6 @@ include_directories(include)
 
 add_executable(architecture_course
         src/Transaction.cpp
-        src/TransactionStorage.cpp
         src/Account.cpp
         src/main.cpp
         src/Bank.cpp
