@@ -31,7 +31,7 @@ void Client::setId(uint32_t id) {
     id_ = id;
 }
 
-const std::string& Client::getAddr() const {
+const std::string& Client::getAddress() const {
     return addr_;
 }
 

@@ -1,6 +1,7 @@
 #include "Bank.h"
 #include <chrono>
 #include <ctime>
+#include <algorithm>
 
 Bank::Bank(std::string swiftCode, std::string name, BankConfig config)
     : swiftCode_(std::move(swiftCode)), name_(std::move(name)), config_(config) {}
@@ -50,11 +51,19 @@ const std::vector<std::unique_ptr<Account>>& Bank::getAccounts() const {
     return accounts_;
 }
 
-void Bank::checkClient(uint32_t clientId) {
+void Bank::recheckClient(uint32_t clientId) {
     this->client(clientId).setIsSus(false);
     for (const auto& account: accounts_) {
         if (account->getClientId() == clientId) {
             account->setLimit(-1);
         }
     }
+}
+
+Account* Bank::findAccountById(uint32_t id) {
+    auto it = std::find_if(accounts_.begin(), accounts_.end(), [id](const auto& acc) { return acc->getId() == id; });
+    if (it == accounts_.end()) {
+        return nullptr;
+    }
+    return it->get();
 }

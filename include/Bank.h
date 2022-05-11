@@ -33,7 +33,7 @@ public:
     uint32_t openDeposit(uint32_t clientId);
     uint32_t openCredit(uint32_t clientId);
 
-    void checkClient(uint32_t clientId);
+    void recheckClient(uint32_t clientId);
 
     const std::string& getSwiftCode() const {
         return swiftCode_;
@@ -48,4 +48,5 @@ public:
     }
 
     const std::vector<std::unique_ptr<Account>>& getAccounts() const;
+    Account* findAccountById(uint32_t id);
 };

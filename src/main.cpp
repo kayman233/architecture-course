@@ -1,6 +1,7 @@
 #include "Account.h"
 #include "Bank.h"
 #include "Client.h"
+#include <algorithm>
 #include <iostream>
 #include <set>
 #include <stdio.h>
@@ -22,12 +23,12 @@ void print_menu() {
     printf("6. Показать банки\n");
     printf("7. Показать мои счета\n");
     printf("8. Выйти\n");
-    printf(">");
 }
 
 int get_variant(int count) {
     int variant;
     char s[100]; // строка для считывания введённых данных
+    printf("> ");
     scanf("%s", s); // считываем строку
 
     while (sscanf(s, "%d", &variant) != 1 || variant < 1 || variant > count) {
@@ -76,22 +77,27 @@ void add_account(int account_variant, Bank* bank, uint32_t client_id) {
     printf("Успешно! ID счета: %d\n", account_id);
 }
 
-void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInfo) {
-    printf("В каком банке хотите завести счет?\n");
+Bank* choose_bank(const std::vector<Bank*> banks, const char* title = "Выберите банк") {
+    printf("%s\n", title);
     int i = 1;
     for (Bank* bank: banks) {
         printf("%d. %s\n", i, bank->getName().c_str());
         ++i;
     }
-
     printf("%d. Отмена\n", i);
     printf(">");
 
-    int bank_variant = get_variant(banks.size() + 1);
+    int bank_variant = get_variant(i);
+    if (bank_variant == i) {
+        return nullptr;
+    }
 
-    Bank* bank = banks[bank_variant - 1];
+    return banks[bank_variant - 1];
+}
 
-    if (bank_variant == banks.size() + 1) {
+void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInfo) {
+    Bank* bank = choose_bank(banks, "В каком банке хотите завести счет?");
+    if (!bank) {
         return;
     }
 
@@ -100,10 +106,7 @@ void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInf
     printf("2. Депозит\n");
     printf("3. Кредитный\n");
     printf("4. Отмена\n");
-    printf(">");
-
     int account_variant = get_variant(4);
-
     if (account_variant == 4) {
         return;
     }
@@ -114,7 +117,7 @@ void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInf
             printf("Уже авторизованы, %s %s\n", client.firstName().c_str(), client.lastName().c_str());
             add_account(account_variant, bank, info.clientId);
             if (!client.isSus()) {
-                bank->checkClient(info.clientId);
+                bank->recheckClient(info.clientId);
             }
             return;
         }
@@ -128,11 +131,9 @@ void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInf
     printf("Введите фамилию: ");
     scanf("%s", surname);
 
-    Client client(name, surname);
-
-    uint32_t client_id = bank->registerClient(client);
-
+    uint32_t client_id = bank->registerClient({name, surname});
     add_account(account_variant, bank, client_id);
+
     UserBankInfo userInfo;
     userInfo.clientId = client_id;
     userInfo.bank = bank;
@@ -141,10 +142,7 @@ void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInf
     printf("Хотите дополнить свою информацию для увеличения лимита?\n");
     printf("1. Нет\n");
     printf("2. Да\n");
-    printf(">");
-
     int more_info_variant = get_variant(2);
-
     if (more_info_variant == 1) {
         return;
     }
@@ -159,7 +157,7 @@ void add_client(std::vector<Bank*> banks, std::vector<UserBankInfo>& userBankInf
 
     bank->client(client_id).setAddress(address);
     bank->client(client_id).setPassportId(passport);
-    bank->checkClient(client_id);
+    bank->recheckClient(client_id);
 }
 
 bool isEmptyUserInfo(std::vector<UserBankInfo>& userBankInfo) {
@@ -179,71 +177,77 @@ void showUserInfo(std::vector<UserBankInfo>& userBankInfo) {
     }
     for (UserBankInfo info: userBankInfo) {
         printf("Счета в банке \"%s\":\n", info.bank->getName().c_str());
-        printf("  id  Sum  Usage   Type\n");
+        printf("  id \t Sum \t Usage \t Type\n");
         for (const auto& account: info.bank->getAccounts()) {
             if (account->getClientId() == info.clientId) {
-                printf("  %d  %lld$  %lld$  %s\n", account->getId(), account->getBalance(), account->getCurrentUsage(),
-                       account->getType().c_str());
+                printf("  %d \t %ld$ \t %ld$ \t %s\n", account->getId(), account->getBalance(),
+                       account->getCurrentUsage(), account->getType().c_str());
             }
         }
     }
 }
 
-void add_to_account(std::vector<UserBankInfo>& userBankInfo) {
+Account* choose_account(Bank& bank, uint32_t clientId = 0, const char* title = "Выберите счет") {
+    auto& accounts = bank.getAccounts();
+    printf("%s\n", title);
+
+    int i = 1;
+    std::vector<Account*> mapVariantToAccount;
+
+    for (auto& acc: accounts) {
+        if (clientId == 0 || clientId == acc->getClientId()) {
+            auto name = bank.client(acc->getClientId());
+            printf("%d. %s принадлежит %s %s с $%ld\n", i, acc->getType().c_str(), name.firstName().c_str(),
+                   name.lastName().c_str(), acc->getBalance());
+            mapVariantToAccount.push_back(acc.get());
+            ++i;
+        }
+    }
+    printf("%d. Отмена\n", i);
+
+    int variant = get_variant(i);
+    if (variant == i) {
+        return nullptr;
+    }
+
+    return mapVariantToAccount[variant - 1];
+}
+
+uint32_t find_client_id_in_user_bank_infos(const std::vector<UserBankInfo>& infos, Bank* bank) {
+    return std::find_if(infos.begin(), infos.end(), [bank](const UserBankInfo& info) { return info.bank == bank; })
+            ->clientId;
+}
+
+void top_up_account(std::vector<UserBankInfo>& userBankInfo) {
     if (isEmptyUserInfo(userBankInfo)) {
         return;
     }
+
     std::vector<Bank*> banks;
     banks.reserve(userBankInfo.size());
     for (UserBankInfo info: userBankInfo) {
         banks.push_back(info.bank);
     }
-    printf("В каком банке хотите пополнить счет?\n");
-    int i = 1;
-    for (Bank* bank: banks) {
-        printf("%d. %s\n", i, bank->getName().c_str());
-        ++i;
-    }
 
-    printf("%d. Отмена\n", i);
-    printf(">");
-
-    int bank_variant = get_variant(banks.size() + 1);
-
-    if (bank_variant == banks.size() + 1) {
+    Bank* bank = choose_bank(banks, "В каком банке хотите пополнить счет?");
+    if (!bank) {
         return;
     }
 
-    Bank* bank = banks[bank_variant - 1];
-    uint32_t clientId = userBankInfo[bank_variant - 1].clientId;
-    printf("Выберите счет\n");
-    i = 1;
-    std::vector<uint32_t> accounts;
-    for (const auto& account: bank->getAccounts()) {
-        if (account->getClientId() == clientId) {
-            accounts.push_back(account->getId());
-            printf("%d.  %d\t%lld$\n", i, account->getId(), account->getBalance());
-            ++i;
-        }
-    }
+    uint32_t clientId = find_client_id_in_user_bank_infos(userBankInfo, bank);
 
-    printf("%d. Отмена\n", i);
-    printf(">");
-
-    int account_variant = get_variant(i);
-
-    if (account_variant == i) {
+    Account* account = choose_account(*bank, clientId);
+    if (!account) {
         return;
     }
 
-    printf("Введите сумму(для отмены введите -1): ");
+    printf("Введите сумму (для отмены введите -1): ");
 
     int sum;
     char s[100]; // строка для считывания введённых данных
     scanf("%s", s); // считываем строку
 
-    while (sscanf(s, "%d", &sum) != 1 ||
-           bank->getAccounts()[accounts[account_variant - 1] - 1]->topUpAccount(sum) == 0) {
+    while (sscanf(s, "%d", &sum) != 1 || !account->topUpAccount(sum)) {
         if (sum == -1) {
             return;
         }
@@ -251,63 +255,38 @@ void add_to_account(std::vector<UserBankInfo>& userBankInfo) {
         scanf("%s", s); // считываем строку повторно
     }
 
-    printf("Успешно");
+    printf("Успешно\n");
 }
 
 void get_cash(std::vector<UserBankInfo>& userBankInfo) {
     if (isEmptyUserInfo(userBankInfo)) {
         return;
     }
+
     std::vector<Bank*> banks;
     banks.reserve(userBankInfo.size());
     for (UserBankInfo info: userBankInfo) {
         banks.push_back(info.bank);
     }
-    printf("В каком банке хотите снять деньги?\n");
-    int i = 1;
-    for (Bank* bank: banks) {
-        printf("%d. %s\n", i, bank->getName().c_str());
-        ++i;
-    }
 
-    printf("%d. Отмена\n", i);
-    printf(">");
-
-    int bank_variant = get_variant(banks.size() + 1);
-
-    if (bank_variant == banks.size() + 1) {
+    Bank* bank = choose_bank(banks, "В каком банке хотите снять деньги?");
+    if (!bank) {
         return;
     }
 
-    Bank* bank = banks[bank_variant - 1];
-    uint32_t clientId = userBankInfo[bank_variant - 1].clientId;
-    printf("Выберите счет\n");
-    i = 1;
-    std::vector<uint32_t> accounts;
-    for (const auto& account: bank->getAccounts()) {
-        if (account->getClientId() == clientId) {
-            accounts.push_back(account->getId());
-            printf("%d.  %d\t%lld$\n", i, account->getId(), account->getBalance());
-            ++i;
-        }
-    }
-
-    printf("%d. Отмена\n", i);
-    printf(">");
-
-    int account_variant = get_variant(i);
-
-    if (account_variant == i) {
+    uint32_t clientId = find_client_id_in_user_bank_infos(userBankInfo, bank);
+    Account* account = choose_account(*bank, clientId);
+    if (!account) {
         return;
     }
 
-    printf("Введите сумму(для отмены введите -1): ");
+    printf("Введите сумму (для отмены введите -1): ");
 
     int sum;
     char s[100]; // строка для считывания введённых данных
     scanf("%s", s); // считываем строку
 
-    while (sscanf(s, "%d", &sum) != 1 || bank->getAccounts()[accounts[account_variant - 1] - 1]->getCash(sum) == 0) {
+    while (sscanf(s, "%d", &sum) != 1 || account->getCash(sum) == 0) {
         if (sum == -1) {
             return;
         }
@@ -322,41 +301,31 @@ void add_info(std::vector<UserBankInfo>& userBankInfo) {
     if (isEmptyUserInfo(userBankInfo)) {
         return;
     }
+
     std::vector<Bank*> banks;
     banks.reserve(userBankInfo.size());
     for (UserBankInfo info: userBankInfo) {
         banks.push_back(info.bank);
     }
-    printf("В каком банке дополнить информацию о вас?\n");
-    int i = 1;
-    for (Bank* bank: banks) {
-        printf("%d. %s\n", i, bank->getName().c_str());
-        ++i;
-    }
 
-    printf("%d. Отмена\n", i);
-    printf(">");
-
-    int bank_variant = get_variant(banks.size() + 1);
-
-    if (bank_variant == banks.size() + 1) {
+    Bank* bank = choose_bank(banks, "В каком банке дополнить информацию о вас?");
+    if (!bank) {
         return;
     }
 
-    Bank* bank = banks[bank_variant - 1];
-    uint32_t clientId = userBankInfo[bank_variant - 1].clientId;
+    uint32_t clientId = find_client_id_in_user_bank_infos(userBankInfo, bank);
 
     char address[100];
     char passport[100];
 
-    printf("Введите адресс: ");
+    printf("Введите адрес: ");
     scanf("%s", address);
     printf("Введите паспортные данные: ");
     scanf("%s", passport);
 
     bank->client(clientId).setAddress(address);
     bank->client(clientId).setPassportId(passport);
-    bank->checkClient(clientId);
+    bank->recheckClient(clientId);
 }
 
 int main() {
@@ -379,19 +348,23 @@ int main() {
     uint32_t aliceAtYellow = yellowBank.registerClient(alice);
     uint32_t bobAtYellow = yellowBank.registerClient(bob);
 
-    greenBank.openDebit(aliceAtGreen);
-    greenBank.openDeposit(carlAtGreen);
+    greenBank.openDeposit(aliceAtGreen);
+    greenBank.openDebit(carlAtGreen);
     yellowBank.openDebit(aliceAtYellow);
 
     std::vector<Bank*> banks;
     banks.push_back(&greenBank);
     banks.push_back(&yellowBank);
 
+    userBankInfo.push_back(UserBankInfo {.bank = &greenBank, .clientId = carlAtGreen});
+    greenBank.findAccountById(carlAtGreen)->topUpAccount(100);
+    printf("У вас есть дебетовый счет в Green Bank на имя Carl с $100\n");
+
     int variant;
     do {
         print_menu(); // выводим меню на экран
 
-        variant = get_variant(7); // получаем номер выбранного пункта меню
+        variant = get_variant(8); // получаем номер выбранного пункта меню
 
         switch (variant) {
             case 1:
@@ -399,7 +372,7 @@ int main() {
                 break;
 
             case 2:
-                add_to_account(userBankInfo);
+                top_up_account(userBankInfo);
                 break;
 
             case 3:

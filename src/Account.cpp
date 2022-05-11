@@ -4,16 +4,16 @@ void Account::addToAccount(int64_t value) {
     this->balance += value;
 }
 
-int Account::topUpAccount(int64_t value) {
+bool Account::topUpAccount(int64_t value) {
     if (value <= 0) {
-        return 0;
+        return false;
     }
     this->addToAccount(value);
-    return 1;
+    return true;
 }
 
-int Account::transferMoneyTo(Account& other, int64_t value) {
-    return 0;
+bool Account::transferMoneyTo(Account& other, int64_t value) {
+    return false;
 }
 
 int Account::getCash(int64_t value) {
@@ -24,16 +24,16 @@ int64_t Account::getCurrentUsage() const {
     return currentUsage;
 }
 
-void Account::setCurrentUsage(int64_t currentUsage) {
-    Account::currentUsage = currentUsage;
+void Account::setCurrentUsage(int64_t usage) {
+    currentUsage = usage;
 }
 
 int64_t Account::getLimit() const {
     return limit;
 }
 
-void Account::setLimit(int64_t limit) {
-    Account::limit = limit;
+void Account::setLimit(int64_t lim) {
+    limit = lim;
 }
 
 bool Deposit::checkRules() {
@@ -45,7 +45,7 @@ int Deposit::getCash(int64_t value) {
     return this->checkRules();
 }
 
-int Deposit::transferMoneyTo(Account &other, int64_t value) {
+bool Deposit::transferMoneyTo(Account& other, int64_t value) {
     return this->checkRules();
 }
 
@@ -55,8 +55,8 @@ bool Debit::checkRules() {
     }
     if (this->getLimit() <= this->getCurrentUsage()) {
         printf("Превышен лимит\n");
-        printf("Ваш лимит %lld\n", this->getLimit());
-        printf("Вы использовали %lld\n", this->getCurrentUsage());
+        printf("Ваш лимит %ld\n", this->getLimit());
+        printf("Вы использовали %ld\n", this->getCurrentUsage());
         printf("(чтобы увеличить лимит дополните информацию о вас)\n");
         return false;
     }
@@ -75,11 +75,11 @@ int Debit::getCash(int64_t value) {
         return 0;
     }
     if (this->getLimit() != -1) {
-        int diff = this->getLimit() - this->getCurrentUsage();
+        int64_t diff = this->getLimit() - this->getCurrentUsage();
         if (value > diff) {
             printf("Лимит будет превышен!\n");
-            printf("Ваш лимит %lld\n", this->getLimit());
-            printf("Вы использовали %lld\n", this->getCurrentUsage());
+            printf("Ваш лимит %ld\n", this->getLimit());
+            printf("Вы использовали %ld\n", this->getCurrentUsage());
             printf("(чтобы увеличить лимит дополните информацию о вас)\n");
             return 0;
         }
@@ -91,12 +91,13 @@ int Debit::getCash(int64_t value) {
     return 1;
 }
 
-int Debit::transferMoneyTo(Account &other, int64_t value) {
+bool Debit::transferMoneyTo(Account& other, int64_t value) {
     if (value <= 0) {
-        return 0;
+        return false;
     }
     this->getCash(value);
     other.addToAccount(value);
+    return true;
 }
 
 bool Credit::checkRules() {
@@ -105,15 +106,15 @@ bool Credit::checkRules() {
     }
     if (this->getLimit() <= this->getCurrentUsage()) {
         printf("Превышен лимит\n");
-        printf("Ваш лимит %lld\n", this->getLimit());
-        printf("Вы использовали %lld\n", this->getCurrentUsage());
+        printf("Ваш лимит %ld\n", this->getLimit());
+        printf("Вы использовали %ld\n", this->getCurrentUsage());
         printf("(чтобы увеличить лимит дополните информацию о вас)\n");
         return false;
     }
     if (this->getBalance() <= -this->getCreditLimit()) {
         printf("Превышен кредитный лимит\n");
-        printf("Ваш баланс %lld\n", this->getBalance());
-        printf("Кредитный лимит -%lld\n", this->getCreditLimit());
+        printf("Ваш баланс %ld\n", this->getBalance());
+        printf("Кредитный лимит -%ld\n", this->getCreditLimit());
 
         return false;
     }
@@ -128,11 +129,11 @@ int Credit::getCash(int64_t value) {
         return 0;
     }
     if (this->getLimit() != -1) {
-        int diff = this->getLimit() - this->getCurrentUsage();
+        int64_t diff = this->getLimit() - this->getCurrentUsage();
         if (value > diff) {
             printf("Лимит будет превышен!\n");
-            printf("Ваш лимит %lld\n", this->getLimit());
-            printf("Вы использовали %lld\n", this->getCurrentUsage());
+            printf("Ваш лимит %ld\n", this->getLimit());
+            printf("Вы использовали %ld\n", this->getCurrentUsage());
             printf("(чтобы увеличить лимит дополните информацию о вас)\n");
 
             return 0;
@@ -140,13 +141,13 @@ int Credit::getCash(int64_t value) {
     }
     if (-value + this->getBalance() <= -this->getCreditLimit()) {
         printf("Будет превышен кредитный лимит\n");
-        printf("Ваш баланс %lld\n", this->getBalance());
-        printf("Кредитный лимит -%lld\n", this->getCreditLimit());
+        printf("Ваш баланс %ld\n", this->getBalance());
+        printf("Кредитный лимит -%ld\n", this->getCreditLimit());
         return 0;
     }
     int commission = 0;
     if (this->getBalance() < 0) {
-        commission = int((float)this->getCommision() * value);
+        commission = int((double) this->getCommission() * (double) value);
     }
     this->addToAccount(-value - commission);
     this->setCurrentUsage(this->getCurrentUsage() + value + commission);
@@ -154,10 +155,11 @@ int Credit::getCash(int64_t value) {
     return 1;
 }
 
-int Credit::transferMoneyTo(Account &other, int64_t value) {
+bool Credit::transferMoneyTo(Account& other, int64_t value) {
     if (value <= 0) {
-        return 0;
+        return false;
     }
     this->getCash(value);
     other.addToAccount(value);
+    return true;
 }

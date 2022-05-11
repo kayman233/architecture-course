@@ -37,13 +37,13 @@ public:
 
     void addToAccount(int64_t value);
 
-    int topUpAccount(int64_t value);
+    bool topUpAccount(int64_t value);
 
     virtual int getCash(int64_t value);
 
     virtual bool checkRules() = 0;
 
-    virtual int transferMoneyTo(Account& other, int64_t value);
+    virtual bool transferMoneyTo(Account& other, int64_t value);
 
 private:
     uint32_t id;
@@ -72,7 +72,7 @@ class Deposit : public Account {
 public:
     Deposit(uint32_t id, uint32_t clientId, const std::string& bankSwift, int64_t balance, int64_t currentUsage,
             int64_t limit, float percentPerYear, time_t expiryDate)
-        : Account(id, clientId, bankSwift, balance, currentUsage, limit, "Deposit"), percent_per_year(percentPerYear),
+        : Account(id, clientId, bankSwift, balance, currentUsage, limit, "Депозит"), percent_per_year(percentPerYear),
           expiry_date(expiryDate) {}
 
     float getPercentPerYear() const {
@@ -95,7 +95,7 @@ public:
 
     int getCash(int64_t value) override;
 
-    int transferMoneyTo(Account& other, int64_t value) override;
+    bool transferMoneyTo(Account& other, int64_t value) override;
 
 private:
     float percent_per_year;
@@ -106,7 +106,7 @@ class Debit : public Account {
 public:
     Debit(uint32_t id, uint32_t clientId, const std::string& bankSwift, int64_t balance, int64_t currentUsage,
           int64_t limit, float percent)
-        : Account(id, clientId, bankSwift, balance, currentUsage, limit, "Debit"), percent(percent) {}
+        : Account(id, clientId, bankSwift, balance, currentUsage, limit, "Дебетовый счет"), percent(percent) {}
 
     float getPercent() const {
         return percent;
@@ -120,7 +120,7 @@ public:
 
     int getCash(int64_t value) override;
 
-    int transferMoneyTo(Account& other, int64_t value) override;
+    bool transferMoneyTo(Account& other, int64_t value) override;
 
 private:
     float percent;
@@ -128,26 +128,26 @@ private:
 
 class Credit : public Account {
 public:
-    float getCommision() const {
-        return commision;
+    float getCommission() const {
+        return commission;
     }
-    void setCommision(float _commision) {
-        Credit::commision = _commision;
+    void setCommission(float _commission) {
+        Credit::commission = _commission;
     }
 
     bool checkRules() override;
 
     int getCash(int64_t value) override;
-    int transferMoneyTo(Account& other, int64_t value) override;
+    bool transferMoneyTo(Account& other, int64_t value) override;
 
 private:
-    float commision;
+    float commission;
     int64_t creditLimit{};
 
 public:
     Credit(uint32_t id, uint32_t clientId, const std::string& bankSwift, int64_t balance, int64_t currentUsage,
-           int64_t limit, float commision, int64_t creditLimit)
-        : Account(id, clientId, bankSwift, balance, currentUsage, limit, "Credit"), commision(commision),
+           int64_t limit, float commission, int64_t creditLimit)
+        : Account(id, clientId, bankSwift, balance, currentUsage, limit, "Кредитный счет"), commission(commission),
           creditLimit(creditLimit) {}
 
     int64_t getCreditLimit() const {

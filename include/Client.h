@@ -31,7 +31,7 @@ public:
         Client::is_sus = is_sus_;
     }
 
-    const std::string& getAddr() const;
+    const std::string& getAddress() const;
 
     const std::string& getPassportId() const;
 
